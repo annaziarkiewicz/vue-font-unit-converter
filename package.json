@@ -1,0 +1,29 @@
+{
+    "name": "vue-font-unit-converter",
+    "version": "1.0.0",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "preview": "vite preview",
+        "lint": "eslint . --ext .js,.ts,.vue"
+    },
+    "dependencies": {
+        "vue": "^3.5.42"
+    },
+    "devDependencies": {
+        "@eslint/js": "^10.0.1",
+        "@types/node": "^25.9.6",
+        "@typescript-eslint/eslint-plugin": "^8.70.0",
+        "@typescript-eslint/parser": "^8.70.0",
+        "@vitejs/plugin-vue": "^6.0.8",
+        "eslint": "^10.10.0",
+        "eslint-plugin-vue": "^10.11.0",
+        "globals": "^17.12.0",
+        "sass": "^1.104.0",
+        "typescript": "^6.0.3",
+        "vite": "^8.3.0",
+        "vue-eslint-parser": "^10.4.1"
+    }
+}

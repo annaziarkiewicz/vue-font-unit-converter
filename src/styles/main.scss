@@ -1,0 +1,18 @@
+@use './variables' as *;
+@use './mixins' as *;
+@use './reset';
+
+@import url('https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&display=swap');
+
+body {
+    background: $color-milk-300;
+    font-family: 'Ubuntu', sans-serif;
+    font-weight: 400;
+    color: $color-milk-100;
+}
+
+::selection {
+    background: $color-milk-300;
+    color: $color-milk-100;
+    text-shadow: 1px 1px #B6B6AF;
+}

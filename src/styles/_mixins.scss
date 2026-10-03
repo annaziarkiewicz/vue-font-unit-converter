@@ -1,0 +1,21 @@
+@mixin focus-ring(
+    $color,
+    $radius: false,
+    $size: 4px
+) {
+    outline: none;
+
+    @if $color == none {
+        box-shadow: none;
+    } @else {
+        box-shadow: 0 0 0 $size $color;
+    }
+
+    @if $radius == true {
+        border-radius: 12px;
+    } @else if $radius == false {
+        border-radius: 0;
+    } @else {
+        border-radius: $radius;
+    }
+}

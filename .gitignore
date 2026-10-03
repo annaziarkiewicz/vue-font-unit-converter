@@ -1,0 +1,26 @@
+# MacOS files
+.DS_Store
+Icon?
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+.vite/
+
+# IDE files
+.idea/
+
+# Environment files
+.env.local
+.env.*.local
+
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Design files
+*.psd
