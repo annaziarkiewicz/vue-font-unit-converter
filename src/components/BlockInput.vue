@@ -45,10 +45,17 @@
         </div>
 
         <div
+            class="az-input__announcement"
+            aria-live="polite"
+            aria-atomic="true"
+        >
+            {{ error && showErrorMessage ? (errorPrefix ? `${errorPrefix}: ${error}` : error) : '' }}
+        </div>
+
+        <div
             v-if="error && showErrorMessage"
             :id="errorDescriptionId"
             class="az-input__error"
-            aria-live="polite"
         >
             <span
                 v-if="errorPrefix"
@@ -61,14 +68,15 @@
 <script lang="ts" setup>
 import {
     computed,
-    onBeforeUnmount,
-    onMounted,
     ref,
-    useAttrs,
-    useId,
     useTemplateRef,
     watch
 } from 'vue'
+
+import {
+    useFieldAccessibility,
+    useFieldFocus
+} from '@/composables/useField'
 
 type NumberInputError = 'empty' | 'invalidFormat' | 'invalidNumber' | 'belowMin' | 'aboveMax' | 'tooManyDecimals'
 
@@ -115,40 +123,20 @@ const emit = defineEmits<{
 const model = defineModel<string | number>({ required: true })
 
 const inputRef = useTemplateRef<HTMLInputElement>('inputRef')
-const attrs = useAttrs()
-const generatedId = useId()
 const displayValue = ref(String(model.value ?? ''))
-const inputKeyboardFocused = ref(false)
-const keyboardNavigation = ref(false)
+const {
+    focusField,
+    getFocusOrigin,
+    keyboardFocused: inputKeyboardFocused
+} = useFieldFocus(inputRef)
 let lastValidInputValue = String(model.value ?? '')
 
-const inputId = computed(() => {
-    return String(attrs.id || generatedId)
-})
-
-const errorDescriptionId = computed(() => {
-    return showErrorMessage
-        ? `${inputId.value}-error`
-        : undefined
-})
-
-const describedBy = computed(() => {
-    return [attrs['aria-describedby'], error ? errorDescriptionId.value : '']
-        .filter(Boolean)
-        .join(' ') || undefined
-})
-
-const ariaInvalid = computed<
-    'true' | 'false' | 'grammar' | 'spelling' | undefined
->(() => {
-    if (error || attrs['aria-invalid'] === 'true') {
-        return 'true'
-    }
-
-    const value = attrs['aria-invalid']
-
-    return value === 'false' || value === 'grammar' || value === 'spelling' ? value : undefined
-})
+const {
+    ariaInvalid,
+    describedBy,
+    errorDescriptionId,
+    fieldId: inputId
+} = useFieldAccessibility(() => error, () => showErrorMessage)
 
 const hasError = computed(() => {
     return ariaInvalid.value === 'true'
@@ -168,41 +156,11 @@ const inputStyle = computed(() => {
 })
 
 const focusInput = (openedBy?: 'keyboard' | 'mouse') => {
-    if (openedBy) {
-        inputRef.value?.dispatchEvent(new CustomEvent('ad2m:focus-origin', {
-            detail: openedBy
-        }))
-    }
-
-    inputRef.value?.focus()
+    focusField(openedBy)
 }
 
 const onInputFocus = (event: FocusEvent) => {
-    inputKeyboardFocused.value = keyboardNavigation.value
     emit('focus', event)
-}
-
-const onFocusOrigin = (event: Event) => {
-    const openedBy = (event as CustomEvent<unknown>).detail
-
-    if (openedBy !== 'keyboard' && openedBy !== 'mouse') {
-        return
-    }
-
-    keyboardNavigation.value = openedBy === 'keyboard'
-
-    if (document.activeElement === inputRef.value) {
-        inputKeyboardFocused.value = keyboardNavigation.value
-    }
-}
-
-const onKeyDown = () => {
-    keyboardNavigation.value = true
-}
-
-const onPointerDown = () => {
-    keyboardNavigation.value = false
-    inputKeyboardFocused.value = false
 }
 
 const getNumberInputError = (inputValue: string): NumberInputError | null => {
@@ -254,8 +212,6 @@ const updateValue = (event: Event) => {
 }
 
 const onInputBlur = (event: FocusEvent) => {
-    inputKeyboardFocused.value = false
-
     const input = event.target as HTMLInputElement
 
     if (hasNumberConstraints.value) {
@@ -297,20 +253,10 @@ watch(model, (value) => {
     displayValue.value = inputValue
 })
 
-onMounted(() => {
-    inputRef.value?.addEventListener('ad2m:focus-origin', onFocusOrigin)
-    document.addEventListener('keydown', onKeyDown)
-    document.addEventListener('pointerdown', onPointerDown)
-})
-
-onBeforeUnmount(() => {
-    inputRef.value?.removeEventListener('ad2m:focus-origin', onFocusOrigin)
-    document.removeEventListener('keydown', onKeyDown)
-    document.removeEventListener('pointerdown', onPointerDown)
-})
-
 defineExpose({
-    focusInput
+    focusInput,
+    getFocusOrigin,
+    getInputElement: () => inputRef.value
 })
 </script>
 
@@ -363,6 +309,10 @@ defineExpose({
         &--error:focus-within {
             border-color: var(--input-error-color, #{$color-rose-200});
         }
+
+        &--error.az-input__field--keyboard-focus {
+            @include focus-ring(var(--input-focus-color, #{$color-grey-400}), 38px);
+        }
     }
 
     &__value {
@@ -375,12 +325,29 @@ defineExpose({
         font-size: 20px;
         line-height: 1em;
         color: $color-milk-500;
+
+        &:is(:autofill, :-webkit-autofill) {
+            background: $color-milk-100;
+            box-shadow: inset 0 0 0 100px $color-milk-100;
+            color: $color-milk-500;
+            caret-color: $color-milk-500;
+            -webkit-text-fill-color: $color-milk-500;
+        }
     }
 
     &__append {
         display: flex;
         flex-shrink: 0;
         align-items: center;
+    }
+
+    &__announcement {
+        position: absolute;
+        overflow: hidden;
+        width: 1px;
+        height: 1px;
+        clip-path: inset(50%);
+        white-space: nowrap;
     }
 
     &__error {
